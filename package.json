@@ -1,7 +1,7 @@
 {
-  "name": "fcc-library",
+  "name": "my-hyperdev-app",
   "version": "0.0.1",
-  "description": "boilerplate",
+  "description": "What am I about?",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -16,7 +16,8 @@
     "mocha": "^3.2.0",
     "zombie": "^5.0.5",
     "helmet": "^3.1.0",
-    "mongoose": "^5.3.14"
+    "mongoose": "^5.3.14",
+    "request-promise-native": "^1.0.5"
   },
   "engines": {
     "node": "4.4.3"

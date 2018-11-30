@@ -8,6 +8,7 @@ dependencies:
   mocha: 3.5.3
   mongodb: 2.2.36
   mongoose: 5.3.14
+  request-promise-native: 1.0.5
   zombie: 5.0.8
 packages:
   /abab/1.0.4:
@@ -1232,6 +1233,28 @@ packages:
     dev: false
     resolution:
       integrity: sha1-p8LgmJH9vzj7sQ03b7cwA+aKxYk=
+  /request-promise-core/1.1.1:
+    dependencies:
+      lodash: 4.17.11
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    peerDependencies:
+      request: ^2.34
+    resolution:
+      integrity: sha1-Pu4AssWqgyOc+wTFcA2jb4HNCLY=
+  /request-promise-native/1.0.5:
+    dependencies:
+      request-promise-core: 1.1.1
+      stealthy-require: 1.1.1
+      tough-cookie: 2.5.0
+    dev: false
+    engines:
+      node: '>=0.12.0'
+    peerDependencies:
+      request: ^2.34
+    resolution:
+      integrity: sha1-UoF3D2jgyXGeUWP9P6tIIhX0/aU=
   /request/2.88.0:
     dependencies:
       aws-sign2: 0.7.0
@@ -1384,6 +1407,12 @@ packages:
       node: '>= 0.6'
     resolution:
       integrity: sha1-Fhx9rBd2Wf2YEfQ3cfqZOBR4Yow=
+  /stealthy-require/1.1.1:
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-NbCYdbT/SfJqd35QmzCQoyJr8ks=
   /string_decoder/1.0.3:
     dependencies:
       safe-buffer: 5.1.2
@@ -1601,4 +1630,5 @@ specifiers:
   mocha: ^3.2.0
   mongodb: ^2.2.16
   mongoose: ^5.3.14
+  request-promise-native: ^1.0.5
   zombie: ^5.0.5

@@ -2,116 +2,91 @@
 *
 *
 *       Complete the API routing below
-*       
-*       
+*
+*
 */
 
 'use strict';
 
-var expect = require('chai').expect;
 var mongoose = require('mongoose')
 var objectId = mongoose.Types.ObjectId
+var request = require('request-promise-native')
 
-var bookSchema = new mongoose.Schema({
-  title: String,
-  comments: { type: [String], default: [] }
+var stockSchema = new mongoose.Schema({
+  code: String,
+  likes: { type: [String], default: [] }
 })
 
-var Book = mongoose.model('book', bookSchema)
+var Stock = mongoose.model('stock', stockSchema)
+
+function saveStock(code, like, ip) {
+  return Stock.findOne({ code: code })
+    .then(stock => {
+      if (!stock) {
+        let newStock = new Stock({ code: code, likes: like ? [ip] : [] })
+        return newStock.save()
+      } else {
+        if (like && stock.likes.indexOf(ip) === -1) {
+          stock.likes.push(ip)
+        }
+        return stock.save()
+      }
+    })
+}
+
+function parseData(data) {
+  let i = 0
+  let stockData = []
+  let likes = []
+  while (i < data.length) {
+    let stock = { stock: data[i].code, price: parseFloat(data[i+1]) }
+    likes.push(data[i].likes.length)
+    stockData.push(stock)
+    i += 2
+  }
+
+  if (likes.length > 1) {
+    stockData[0].rel_likes = likes[0] - likes[1]
+    stockData[1].rel_likes = likes[1] - likes[0]
+  } else {
+    stockData[0].likes = likes[0]
+    stockData = stockData[0]
+  }
+  
+  return stockData
+}
 
 module.exports = function (app) {
-
-  app.route('/api/books')
+  
+  app.get('/api/testing', (req, res) => {
+    console.log(req.connection)
+    
+    res.json({ IP: req.ip })
+  })
+  
+  app.route('/api/stock-prices')
     .get(function (req, res) {
-      //response will be array of book objects
-      //json res format: [{"_id": bookid, "title": book_title, "commentcount": num_of_comments },...]
-      let project = {
-        _id: 1,
-        title: 1,
-        commentcount: { $size: '$comments' }
+      let code = req.query.stock || ''
+      if (!Array.isArray(code)) {
+        code = [code]
       }
-      Book.aggregate([{ $match: {} }, { $project: project }], (err, books) => {
-        if (err) {
-          res.status(500).send(err)
-        } else {
-          res.json(books)
-        }
-      })
-    })
     
-    .post(function (req, res){
-      let title = req.body.title
-      if (!title) {
-        return res.status(400).send('no title given')
-      }
-      //response will contain new book object including atleast _id and title
-      let newBook = new Book({ title })
-      newBook.save((err, book) => {
-        if (err) {
-          res.status(500).send('could not save')
-        } else {
-          res.json(book)
-        }
+      let promises = []
+      code.forEach(code => {
+        promises.push(saveStock(code.toUpperCase(), req.query.like, req.ip))
+        
+        let url = `https://api.iextrading.com/1.0/stock/${code.toUpperCase()}/price`
+        promises.push(request(url))
       })
-    })
     
-    .delete(function(req, res) {
-      Book.deleteMany({}, err => {
-        if (err) {
-          res.status(500).send(err)
-        } else {
-          res.send('complete delete successful')
-        }
-      })
-    });
-
-
-
-  app.route('/api/books/:id')
-    .get(function (req, res) {
-      let bookid = req.params.id;
-    
-      Book.findById(bookid, (err, book) => {
-        if (err) {
-          res.status(500).send(err)
-        } else if (!book) {
-          res.status(404).send('no book exists')
-        } else {
-          res.json(book)
-        }
-      })
-      //json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
-    })
-    
-    .post(function(req, res) {
-      let bookid = req.params.id;
-      let comment = req.body.comment;
-      //json res format same as .get
-      Book.findOneAndUpdate({ _id: bookid }, { $push: { comments: comment } }, { new: true }, (err, book) => {
-        if (err) {
-          res.status(500).send(err)
-        } else {
-          res.json(book)
-        }
-      })
-    })
-    
-    .delete(function(req, res){
-      let bookid = req.params.id
-
-      Book.findById(bookid)
-        .then(issue => {
-          if (!issue) {
-            throw 'no book exists'
-          }
-          return Book.deleteOne({ _id: bookid })
-        })
-        .then(removed => {
-          res.send('delete successful')
+      Promise.all(promises)
+        .then(data => {
+          let stockData = parseData(data)
+          res.json({ stockData })
         })
         .catch(err => {
-          res.status(404).send('no book exists')
+          console.log(err)
+          res.send(err)
         })
     })
-  
-};
+}
