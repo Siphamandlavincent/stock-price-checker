@@ -3,12 +3,41 @@ require('dotenv').config();
 const express     = require('express');
 const bodyParser  = require('body-parser');
 const cors        = require('cors');
-
-const apiRoutes         = require('./routes/api.js');
-const fccTestingRoutes  = require('./routes/fcctesting.js');
-const runner            = require('./test-runner');
+const helmet = require('helmet');
 
 const app = express();
+
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'"],
+      imgSrc: ["'self'"],
+    },
+  },
+  hidePoweredBy: true,
+  noSniff: true,
+  frameguard: {
+    action: 'deny'
+  },
+  xssFilter: true,
+  dnsPrefetchControl: {
+    allow: false
+  },
+  referrerPolicy: { 
+    policy: 'same-origin' 
+  }
+}));
+
+// Rate limiting
+const rateLimit = require('express-rate-limit');
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use('/api/', limiter);
 
 app.use('/public', express.static(process.cwd() + '/public'));
 
@@ -24,9 +53,11 @@ app.route('/')
   });
 
 //For FCC testing purposes
+const fccTestingRoutes = require('./routes/fcctesting');
 fccTestingRoutes(app);
 
 //Routing for API 
+const apiRoutes = require('./routes/api');
 apiRoutes(app);  
     
 //404 Not Found Middleware
@@ -37,19 +68,36 @@ app.use(function(req, res, next) {
 });
 
 //Start our server and tests!
-const listener = app.listen(process.env.PORT || 3000, function () {
-  console.log('Your app is listening on port ' + listener.address().port);
-  if(process.env.NODE_ENV==='test') {
-    console.log('Running Tests...');
-    setTimeout(function () {
-      try {
-        runner.run();
-      } catch(e) {
-        console.log('Tests are not valid:');
-        console.error(e);
-      }
-    }, 3500);
+const startServer = async (port) => {
+  try {
+    const listener = await new Promise((resolve, reject) => {
+      const server = app.listen(port)
+        .once('listening', () => resolve(server))
+        .once('error', reject);
+    });
+    console.log('Your app is listening on port ' + listener.address().port);
+if(process.env.NODE_ENV==='test') {
+  console.log('Running Tests...');
+  const runner = require('./test-runner');
+  setTimeout(function () {
+    try {
+      runner.run();
+        } catch (e) {
+          console.log('Tests are not valid:');
+          console.error(e);
+        }
+      }, 1500);
+    }
+  } catch (error) {
+    if (error.code === 'EADDRINUSE') {
+      console.log(`Port ${port} is busy, trying ${port + 1}`);
+      await startServer(port + 1);
+    } else {
+      console.error('Server error:', error);
+      process.exit(1);
+    }
   }
-});
+};
 
-module.exports = app; //for testing
+startServer(process.env.PORT || 3000);
+module.exports = app;
