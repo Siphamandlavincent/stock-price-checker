@@ -3,6 +3,7 @@ require('dotenv').config();
 const express     = require('express');
 const bodyParser  = require('body-parser');
 const cors        = require('cors');
+const MongoClient = require('mongodb').MongoClient;
 
 const apiRoutes         = require('./routes/api.js');
 const fccTestingRoutes  = require('./routes/fcctesting.js');
@@ -35,6 +36,22 @@ app.use(function(req, res, next) {
     .type('text')
     .send('Not Found');
 });
+
+//Test MongoDB connection
+MongoClient.connect(process.env.MONGO_URI, { 
+  useUnifiedTopology: true,
+  useNewUrlParser: true,
+  ssl: true,
+  tls: true,
+  tlsAllowInvalidCertificates: true
+})
+  .then(client => {
+    console.log('Connected successfully to MongoDB');
+    client.close();
+  })
+  .catch(error => {
+    console.error('MongoDB connection error:', error);
+  });
 
 //Start our server and tests!
 const listener = app.listen(process.env.PORT || 3000, function () {
