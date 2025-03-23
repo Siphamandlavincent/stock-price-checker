@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "stock-price-checker",
   "version": "1.0.0",
   "description": "Stock Price Checker Project",
@@ -18,5 +19,37 @@
     "mocha": "^8.4.0",
     "mongodb": "^3.7.4",
     "node-fetch": "^2.7.0"
+=======
+  "name": "boilerplate-project-stockchecker",
+  "version": "0.0.1",
+  "description": "InfoSec project for freeCodeCamp",
+  "scripts": {
+    "start": "node server.js",
+    "test": "mocha --timeout 5000 --ui tdd tests/"
+  },
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "cors": "^2.8.1",
+    "dotenv": "^8.2.0",
+    "express": "^4.14.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^3.23.3",
+    "mongoose": "^8.10.1",
+    "node-fetch": "^2.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/freeCodeCamp/boilerplate-project-stockchecker"
+  },
+  "keywords": [
+    "node",
+    "express"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
+    "mocha": "^9.2.2"
+>>>>>>> 32f600d4a850403412261740f1d18dfec2c90e70
   }
 }
